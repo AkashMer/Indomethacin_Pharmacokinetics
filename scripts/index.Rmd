@@ -1,0 +1,134 @@
+---
+title: "Air Quality in New York"
+author: "Akash Mer"
+date: "`r Sys.Date()`"
+output:
+    ioslides_presentation:
+        keep_md: true
+        smaller: true
+knit: (function(input, ...){
+    rmarkdown::render(input,
+        output_dir = "C:/Users/akash/Documents/datasciencecoursera/NY_Air_Quality/docs",
+        output_file = file.path("./index"))
+    })
+---
+
+## **Introduction**
+
+**Exploratory Data Analysis** of daily air quality in New York, from May to September, 1973  
+**Code book** : As per the help page of *airquality* data set from the R *datasets* package
+  
+- **Ozone** - Mean ozone in *parts per billion(ppb)* from 1 to 3 pm at Roosevelt Island
+- **Solar.R** - Solar radiation in *Langleys(lang) in the frequency band 4000-7000 Angstroms* from 8 am to 12 pm at Central Park
+- **Wind** - Average wind speed in *miles per hour(mph)* from 7 to 10 am at LaGuardia Airport
+- **Temp** - Maximum daily temperature in *degrees Fahrenheit($^\circ$F)* at LaGuardia Airport
+- **Month** - Month for the measurement date
+- **Day** - Day of the month for the measurement date
+  
+```{r loadData, echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE}
+if(system.file(package = "datasets") == "") install.packages("datasets")
+library(datasets)
+data("airquality")
+```
+
+## **Data Processing**
+  
+`r round((1-mean(complete.cases(airquality)))*100, 2)`% of rows have missing values and these values do have a discernable pattern, as most of them are missing in the month of June, thus they are of the type **MAR**  
+These will be imputed with the *impute.knn* function from the **impute** package with the number of neighbours to be used for *imputation = 5 and rng seed set to 325*
+
+```{r transformData, echo=TRUE, cache=TRUE, dependson="loadData"}
+if(system.file(package = "impute") == "") install.packages("impute")
+library(impute)
+dat <- as.data.frame(impute.knn(as.matrix(airquality),k=5,rng.seed = 325)$data)
+# Converting the ozone imputed to whole numbers since it is represented in ppm
+dat$Ozone <- round(dat$Ozone)
+```
+  
+Thus now the there are no missing values in the data set with the **mean of complete cases in the data set being `r mean(complete.cases(dat))`**
+
+## **Trend of Ozone vs Solar Radiation in NY**
+
+```{r plot1, echo=FALSE, cache=TRUE, fig.width=8, fig.height=5, fig.align='left', warning=FALSE, message=FALSE, dependson=c("loadData", "transformData")}
+if(system.file(package = "ggplot2") == "") install.packages("ggplot2")
+library(ggplot2)
+if(system.file(package = "plotly") == "") install.packages("plotly")
+library(plotly)
+
+# Cleaning up the Month column to display the name of the month
+dat$Month <- factor(dat$Month, labels = c("May", "June", "July", "August",
+                                          "September"))
+
+# Creating the plot with the ggplot
+plot1 <- ggplot(dat, aes(Solar.R, Ozone, color = Month)) +
+    geom_point() +
+    facet_wrap("Month", nrow = 1) +
+    scale_color_brewer(palette = "Set2") +
+    labs(x = "Solar Radiation(lang)", y = "Ozone (ppb)",
+         color = "",
+         caption = "Reference: airquality data set from the R datasets package") +
+    theme_bw(base_size = 15) +
+    theme(legend.position = "none",
+          plot.caption = element_text(face = "italic"))
+
+# Displaying the plot as a plotly interactive object
+ggplotly(plot1)
+```
+
+## **Trend of Ozone vs Wind in NY**
+
+```{r plot2, echo=FALSE, cache=TRUE, fig.width=8, fig.height=5, fig.align='left', warning=FALSE, message=FALSE, dependson=c("loadData", "transformData")}
+# Creating the plot with the ggplot
+plot2 <- ggplot(dat, aes(Wind, Ozone, color = Month)) +
+    geom_point() +
+    facet_wrap("Month", nrow = 1) +
+    scale_color_brewer(palette = "Set2") +
+    labs(x = "Wind(miles/hr)", y = "Ozone (ppb)") +
+    theme_bw(base_size = 15) +
+    theme(legend.position = "none")
+
+# Displaying the plot as a plotly interactive object
+ggplotly(plot2)
+```
+
+## **Trend of Ozone vs Temperature in NY**
+
+```{r plot3, echo=FALSE, cache=TRUE, fig.width=8, fig.height=5, fig.align='left', warning=FALSE, message=FALSE, dependson=c("loadData", "transformData")}
+# Creating the plot with the ggplot
+plot3 <- ggplot(dat, aes(Temp, Ozone, color = Month)) +
+    geom_point() +
+    facet_wrap("Month", nrow = 1) +
+    scale_color_brewer(palette = "Set2") +
+    labs(x = "Temperature(F)", y = "Ozone (ppb)") +
+    theme_bw(base_size = 15) +
+    theme(legend.position = "none")
+
+# Displaying the plot as a plotly interactive object
+ggplotly(plot3)
+```
+
+## **Conclusions**
+
+- There is a greater association of ozone levels to solar radiation and both tend to increase during July-September period
+- There is weak association of ozone levels to temperature of the day and both tend to increase during July-September period
+- There seems to be no association between ozone levels and wind speed and wind speeds remain fairly similar across the months
+  
+All of these points will need to be confirmed by some kind of statistical tests, either by Student's t-test or building a linear regression model
+  
+## **Appendix**
+
+### **Source**
+The data were obtained from the New York State Department of Conservation (ozone data) and the National Weather Service (meteorological data)
+
+### **References**
+Chambers, J. M., Cleveland, W. S., Kleiner, B. and Tukey, P. A. (1983) *Graphical Methods for Data Analysis* Belmont, CA: Wadsworth.
+
+### **R markdown details**
+  
+Written in **Rmarkdown file in `r R.version.string` using RStudio IDE**  
+**Packages** used,  
+  
+- **datasets** : *Version `r packageVersion("datasets")`*
+- **impute** : *Version `r packageVersion("impute")`*
+- **ggplot2** : *Version `r packageVersion("ggplot2")`*
+- **plotly** : *Version `r packageVersion("plotly")`*
+  
