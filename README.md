@@ -1,6 +1,6 @@
-# **Kindly visit the following site to view the report, no need to download the repository, this is a github pages site, [GitHub Pages Site for the project](https://akashmer.github.io/NY_Air_Quality/#1)**
+# **Kindly visit the following site to view the report, no need to download the repository, this is a github pages site, [Air Quality in NY](https://akashmer.github.io/NY_Air_Quality/#1)**
 
-# Air Quality in New York
+# **Air Quality in New York**
 An exploratory data analysis of the *airquality* data set from the R **datasets** package
   
 # **Repository contains**
